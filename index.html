@@ -2,18 +2,104 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>GPU Check</title>
+  <title>GPU Code</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      max-width: 600px;
+      width: 90%;
+      text-align: center;
+    }
+    
+    .code-display {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-family: 'Courier New', monospace;
+      font-size: 1.2rem;
+      color: #ffffff;
+      word-wrap: break-word;
+      line-height: 1.4;
+      text-align: left;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .loading {
+      opacity: 0.7;
+      text-align: center;
+    }
+    
+    .copy-btn {
+      background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 25px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    }
+    
+    .copy-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    }
+    
+    .copy-btn:active {
+      transform: translateY(0);
+    }
+    
+    .copy-btn.copied {
+      background: linear-gradient(45deg, #00d2d3, #54a0ff);
+      box-shadow: 0 4px 15px rgba(0, 210, 211, 0.3);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.6s ease-out;
+    }
+  </style>
 </head>
 <body>
-  <h1>Checking Device...</h1>
-  <pre id="output"></pre>
+  <div class="container">
+    <div id="code-output" class="code-display loading">Loading...</div>
+    <button id="copy-btn" class="copy-btn" onclick="copyCode()">Copy</button>
+  </div>
+  
   <script>
-    async function getIP() {
-      const res = await fetch('https://api.ipify.org?format=json');
-      const data = await res.json();
-      return data.ip;
-    }
-
+    let gpuCode = '';
+    
     function getGpuInfo() {
       const canvas = document.createElement('canvas');
       const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
@@ -23,22 +109,54 @@
           return gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
         }
       }
-      return "Unknown";
+      return "GPU information not available";
     }
-
-    (async function () {
-      const ip = await getIP();
+    
+    function copyCode() {
+      const btn = document.getElementById('copy-btn');
+      
+      navigator.clipboard.writeText(gpuCode).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      }).catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = gpuCode;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+    
+    (function () {
       const gpu = getGpuInfo();
-
-      const output = `IP: ${ip}\nGPU: ${gpu}`;
-      console.log(output);
-      document.getElementById('output').textContent = output;
-
-      // Optional: check for allowed GPU
+      gpuCode = gpu;
+      const outputElement = document.getElementById('code-output');
+      
+      setTimeout(() => {
+        outputElement.textContent = gpu;
+        outputElement.classList.remove('loading');
+        outputElement.classList.add('fade-in');
+      }, 500);
+      
       const targetRenderer = "هنا الكود الصادر من الموقع متغيرش اي حاجة في الكود ولا حرف ";
       if (gpu.includes(targetRenderer)) {
         console.log("الإضافة تعمل على الجهاز المصرح به.");
-        // Add any custom code here
+        // Your code here
       }
     })();
   </script>
